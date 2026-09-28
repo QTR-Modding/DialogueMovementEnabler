@@ -1,5 +1,6 @@
 #include "AutoClose.h"
 #include "Dialogue.h"
+#include "DragLook.h"
 #include "EdgeLook.h"
 #include "Remap.h"
 #include "Settings.h"
@@ -46,7 +47,7 @@ SFSE_PLUGIN_LOAD(const SFSE::LoadInterface* a_sfse) {
     }
 
     if (!settings.allowMovement && !settings.allowRunning && !settings.allowJumping && !settings.allowPOVSwitch &&
-        !settings.autoClose && !settings.edgeRotation) {
+        !settings.autoClose && !settings.dragRotation && !settings.edgeRotation) {
         REX::INFO("Every feature is off in the .ini");
         return true;
     }
@@ -56,6 +57,7 @@ SFSE_PLUGIN_LOAD(const SFSE::LoadInterface* a_sfse) {
     }
     Dialogue::Install(settings);
     AutoClose::Install(settings);
+    DragLook::Install(settings);
     EdgeLook::Install(settings);
 
     if (!SFSE::GetMessagingInterface()->RegisterListener(OnMessage)) {
@@ -63,8 +65,10 @@ SFSE_PLUGIN_LOAD(const SFSE::LoadInterface* a_sfse) {
         return true;
     }
 
-    REX::INFO("Movement {}, running {}, jumping {}, sneaking {}, POV switch {}, auto close {}, edge rotation {}",
-              settings.allowMovement, settings.allowRunning, settings.allowJumping, settings.allowSneaking,
-              settings.allowPOVSwitch, settings.autoClose, settings.edgeRotation);
+    REX::INFO(
+        "Movement {}, running {}, jumping {}, sneaking {}, POV switch {}, auto close {}, "
+        "drag rotation {}, edge rotation {}",
+        settings.allowMovement, settings.allowRunning, settings.allowJumping, settings.allowSneaking,
+        settings.allowPOVSwitch, settings.autoClose, settings.dragRotation, settings.edgeRotation);
     return true;
 }

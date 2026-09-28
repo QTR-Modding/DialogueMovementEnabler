@@ -29,6 +29,7 @@ Settings Settings::Load(const std::filesystem::path& a_path) {
     settings.autoCloseDistance = readFloat("AutoClose", "fAutoCloseDistance", settings.autoCloseDistance);
     settings.autoCloseTolerance = readFloat("AutoClose", "fAutoCloseTolerance", settings.autoCloseTolerance);
 
+    settings.dragRotation = ini.GetBoolValue("Camera", "bDragRotation", settings.dragRotation);
     settings.edgeRotation = ini.GetBoolValue("Camera", "bEdgeRotation", settings.edgeRotation);
     settings.edgeSize = readFloat("Camera", "fEdgeSize", settings.edgeSize);
     settings.edgeSizeBottom = readFloat("Camera", "fEdgeSizeBottom", settings.edgeSizeBottom);

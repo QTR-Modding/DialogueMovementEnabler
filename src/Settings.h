@@ -16,7 +16,9 @@ struct Settings {
     float autoCloseDistance{19.0f};
     float autoCloseTolerance{6.0f};
 
-    bool edgeRotation{true};
+    bool dragRotation{true};
+
+    bool edgeRotation{false};
     float edgeSize{0.12f};
     float edgeSizeBottom{0.03f};  // dialogue lines sit near the bottom
     float edgeSpeed{12.0f};

@@ -4,7 +4,7 @@ Keep moving while you talk to people in Starfield, like *Dialogue Movement Enabl
 
 - Walk during conversations, with your own key bindings. Running, jumping, sneaking and switching view are optional.
 - Walk away and the conversation ends.
-- Push the cursor against a screen edge to look around.
+- Hold the left mouse button outside the dialogue box to look around.
 
 Movement keys no longer pick dialogue lines: use the mouse, arrow keys or number keys. The mod stays off when Dialogue Camera is turned on in Settings > Accessibility, and while another menu such as barter is open.
 
@@ -24,7 +24,8 @@ Requires [SFSE](https://sfse.silverlock.org/) and [Address Library for SFSE Plug
 | `bAutoClose` | 1 | End the conversation when you walk away |
 | `fAutoCloseDistance` | 19 | How far, in metres |
 | `fAutoCloseTolerance` | 6 | Extra distance for conversations started from further away |
-| `bEdgeRotation` | 1 | Look around with the mouse at the screen edges |
+| `bDragRotation` | 1 | Hold the left mouse button outside the dialogue box to hide the cursor and look around |
+| `bEdgeRotation` | 0 | Look around with the mouse at the screen edges |
 | `fEdgeSize` | 0.12 | Width of the edge area, as a share of the screen |
 | `fEdgeSizeBottom` | 0.03 | Same for the bottom edge, kept thin so it stays clear of dialogue lines |
 | `fEdgeSpeed` | 12 | How fast the view turns |

@@ -6,6 +6,7 @@
 #include "AutoClose.h"
 #include "Bindings.h"
 #include "Dialogue.h"
+#include "DragLook.h"
 #include "EdgeLook.h"
 #include "VtableHook.h"
 
@@ -44,6 +45,7 @@ namespace Remap {
 
         void OnDialogueOpened() {
             g_lastRenamed = 0;
+            DragLook::Arm(false);
 
             if (Dialogue::IsCameraEnabled()) {
                 g_active = false;
@@ -62,6 +64,7 @@ namespace Remap {
 
             g_active = true;
             EdgeLook::Reset();
+            DragLook::Arm(true);
             if (g_debug) {
                 REX::INFO("{} movement keys:{}", *count, Bindings::Describe());
             }
@@ -129,13 +132,20 @@ namespace Remap {
             }
 
             if (!dialogue || !g_active || !GameplayInputAllowed()) {
+                if (dialogue) {
+                    DragLook::Cancel();
+                }
                 g_process(a_controls, a_head);
                 return;
             }
 
             const auto renamed = RenameMovementKeys(a_head);
-            g_process(a_controls, EdgeLook::Attach(a_head));
-            EdgeLook::Detach();
+            if (DragLook::Update(a_head)) {
+                g_process(a_controls, a_head);
+            } else {
+                g_process(a_controls, EdgeLook::Attach(a_head));
+                EdgeLook::Detach();
+            }
 
             if (g_debug) {
                 LogRenamed(renamed);

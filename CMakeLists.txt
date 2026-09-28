@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(DialogueMovementEnabler VERSION 1.0.1 LANGUAGES CXX)
+project(DialogueMovementEnabler VERSION 1.1.0 LANGUAGES CXX)
 
 set(PLUGIN_AUTHOR "RoseEden" CACHE STRING "Author name in the plugin declaration")
 set(MOD_FOLDER_NAME "Dialogue Movement Enabler" CACHE STRING "Folder name under STARFIELD_MODS_FOLDER")
@@ -42,6 +42,7 @@ add_library(${PROJECT_NAME} SHARED
     src/AutoClose.cpp
     src/Bindings.cpp
     src/Dialogue.cpp
+    src/DragLook.cpp
     src/EdgeLook.cpp
     src/Remap.cpp
     src/Settings.cpp
