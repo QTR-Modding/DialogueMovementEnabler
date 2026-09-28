@@ -16,6 +16,7 @@ Requires [SFSE](https://sfse.silverlock.org/) and [Address Library for SFSE Plug
 
 | Setting | Default | What it does |
 |---|---|---|
+| `bEnabled` | 1 | Turn the whole mod on or off |
 | `bAllowMovement` | 1 | Walk and strafe |
 | `bAllowRunning` | 0 | Run and sprint |
 | `bAllowJumping` | 0 | Jump |

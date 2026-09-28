@@ -46,8 +46,8 @@ SFSE_PLUGIN_LOAD(const SFSE::LoadInterface* a_sfse) {
         return true;
     }
 
-    if (!settings.allowMovement && !settings.allowRunning && !settings.allowJumping && !settings.allowPOVSwitch &&
-        !settings.autoClose && !settings.dragRotation && !settings.edgeRotation) {
+    if (!settings.allowMovement && !settings.allowRunning && !settings.allowJumping && !settings.allowSneaking &&
+        !settings.allowPOVSwitch && !settings.autoClose && !settings.dragRotation && !settings.edgeRotation) {
         REX::INFO("Every feature is off in the .ini");
         return true;
     }
