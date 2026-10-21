@@ -72,8 +72,9 @@ namespace AutoClose {
         };
         Session g_session;
         bool g_inConversation{false};
-        std::uint32_t g_lastExitSpeaker{0};
-        std::chrono::steady_clock::time_point g_lastExitAt{};
+        // Written by the exit task, read from input threads; the speaker is stored last.
+        std::atomic<std::uint32_t> g_lastExitSpeaker{0};
+        std::atomic<std::chrono::steady_clock::time_point> g_lastExitAt{};
 
         [[nodiscard]] const std::byte* ActiveManager() {
             const auto manager = *g_game.menuTopicManager;
@@ -146,8 +147,8 @@ namespace AutoClose {
                 !CanExit(manager)) {
                 return;
             }
-            g_lastExitSpeaker = a_speaker;
-            g_lastExitAt = std::chrono::steady_clock::now();
+            g_lastExitAt.store(std::chrono::steady_clock::now(), std::memory_order_relaxed);
+            g_lastExitSpeaker.store(a_speaker, std::memory_order_release);
             g_game.requestExit();
         }
 
@@ -201,7 +202,8 @@ namespace AutoClose {
         const auto speaker = *reinterpret_cast<const std::uint32_t*>(manager + kSpeakerHandleOffset);
         if (!g_inConversation || speaker != g_session.speaker) {
             g_inConversation = true;
-            const bool restarted = speaker == g_lastExitSpeaker && now - g_lastExitAt < kRestartWindow;
+            const bool restarted = speaker == g_lastExitSpeaker.load(std::memory_order_acquire) &&
+                                   now - g_lastExitAt.load(std::memory_order_relaxed) < kRestartWindow;
             g_session = Session{.speaker = speaker, .ignored = restarted};
             if (restarted && g_debug) {
                 REX::INFO("AutoClose: conversation reopened by the game, left open");
