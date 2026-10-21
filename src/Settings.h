@@ -17,6 +17,7 @@ struct Settings {
     float autoCloseTolerance{6.0f};
 
     bool dragRotation{true};
+    bool freeLook{false};
 
     bool edgeRotation{false};
     float edgeSize{0.12f};

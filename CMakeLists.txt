@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(DialogueMovementEnabler VERSION 1.1.1 LANGUAGES CXX)
+project(DialogueMovementEnabler VERSION 1.2.0 LANGUAGES CXX)
 
 set(PLUGIN_AUTHOR "RoseEden" CACHE STRING "Author name in the plugin declaration")
 set(MOD_FOLDER_NAME "Dialogue Movement Enabler" CACHE STRING "Folder name under STARFIELD_MODS_FOLDER")

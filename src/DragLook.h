@@ -14,6 +14,6 @@ namespace DragLook {
     // Ends a drag whose release another menu took
     void Cancel();
 
-    // True while dragging
+    // True while dragging or in free look
     bool Update(RE::InputEvent* a_head);
 }

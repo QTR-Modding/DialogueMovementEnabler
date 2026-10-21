@@ -47,7 +47,8 @@ SFSE_PLUGIN_LOAD(const SFSE::LoadInterface* a_sfse) {
     }
 
     if (!settings.allowMovement && !settings.allowRunning && !settings.allowJumping && !settings.allowSneaking &&
-        !settings.allowPOVSwitch && !settings.autoClose && !settings.dragRotation && !settings.edgeRotation) {
+        !settings.allowPOVSwitch && !settings.autoClose && !settings.dragRotation && !settings.freeLook &&
+        !settings.edgeRotation) {
         REX::INFO("Every feature is off in the .ini");
         return true;
     }
@@ -67,8 +68,8 @@ SFSE_PLUGIN_LOAD(const SFSE::LoadInterface* a_sfse) {
 
     REX::INFO(
         "Movement {}, running {}, jumping {}, sneaking {}, POV switch {}, auto close {}, "
-        "drag rotation {}, edge rotation {}",
+        "drag rotation {}, free look {}, edge rotation {}",
         settings.allowMovement, settings.allowRunning, settings.allowJumping, settings.allowSneaking,
-        settings.allowPOVSwitch, settings.autoClose, settings.dragRotation, settings.edgeRotation);
+        settings.allowPOVSwitch, settings.autoClose, settings.dragRotation, settings.freeLook, settings.edgeRotation);
     return true;
 }

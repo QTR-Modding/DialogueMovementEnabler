@@ -26,7 +26,8 @@ Requires [SFSE](https://sfse.silverlock.org/) and [Address Library for SFSE Plug
 | `fAutoCloseDistance` | 19 | How far, in metres |
 | `fAutoCloseTolerance` | 6 | Extra distance for conversations started from further away |
 | `bDragRotation` | 1 | Hold the left mouse button outside the dialogue box to hide the cursor and look around |
-| `bEdgeRotation` | 0 | Look around with the mouse at the screen edges |
+| `bFreeLook` | 0 | Hide the cursor for the whole conversation and look around with the mouse; pick replies with the arrow keys, number keys or the activate key. Replaces drag and edge rotation |
+| `bEdgeRotation` | 0 | Look around with the mouse at the screen edges. Not used with `bFreeLook` |
 | `fEdgeSize` | 0.12 | Width of the edge area, as a share of the screen |
 | `fEdgeSizeBottom` | 0.03 | Same for the bottom edge, kept thin so it stays clear of dialogue lines |
 | `fEdgeSpeed` | 12 | How fast the view turns |

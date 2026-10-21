@@ -79,6 +79,7 @@ namespace DragLook {
         void* const* g_messageQueue{nullptr};
         const std::byte* const* g_menuCursor{nullptr};
         bool g_debug{false};
+        bool g_freeLook{false};
 
         // Never destroyed
         RE::BSFixedString& g_look = *new RE::BSFixedString;
@@ -94,7 +95,7 @@ namespace DragLook {
         std::atomic<Settle> g_settle{Settle::kNone};
         std::atomic<std::uint32_t> g_settleFrames{0};
 
-        // Cursor state the game asked for while a drag hides it
+        // Cursor state the game asked for, kept while a drag hides it
         std::mutex g_lock;
         bool g_wantCursor{false};
         bool g_ownHidePending{false};
@@ -128,17 +129,32 @@ namespace DragLook {
                              event.y - static_cast<float>(viewport.top), kHitTestShapesNoInvisible, 0);
         }
 
-        void StartDrag() {
+        void StartDrag(bool a_cursorShown) {
             {
                 std::scoped_lock lock{g_lock};
-                g_wantCursor = true;
+                g_wantCursor = g_wantCursor || a_cursorShown;
                 g_ownHidePending = true;
                 g_dragging.store(true, std::memory_order_release);
             }
             Send(g_hideCursor);
             if (g_debug) {
-                REX::INFO("DragLook: start");
+                REX::INFO("DragLook: {} start", g_freeLook ? "free look" : "drag");
             }
+        }
+
+        // Hide is sent even when the cursor is hidden, in case a ShowCursor is in flight.
+        [[nodiscard]] bool StartFreeLook() {
+            if (!g_freeLook || !g_armed.load(std::memory_order_acquire)) {
+                return false;
+            }
+            StartDrag(false);
+            return true;
+        }
+
+        // With the reply list up, a click would pick the reply under the hidden cursor.
+        [[nodiscard]] bool BlockFreeLookClick() {
+            std::scoped_lock lock{g_lock};
+            return g_dragging.load(std::memory_order_relaxed) && g_wantCursor;
         }
 
         void EndDrag() {
@@ -164,6 +180,7 @@ namespace DragLook {
             {
                 std::scoped_lock lock{g_lock};
                 g_dragging.store(false, std::memory_order_release);
+                g_wantCursor = false;
                 g_ownHidePending = false;
             }
             g_settle.store(Settle::kNone, std::memory_order_release);
@@ -186,7 +203,7 @@ namespace DragLook {
             if (!pressed || !CursorShown(a_menu) || OverMenu(a_menu)) {
                 return false;
             }
-            StartDrag();
+            StartDrag(true);
             return true;
         }
 
@@ -201,7 +218,8 @@ namespace DragLook {
             if (g_armed.load(std::memory_order_acquire) && a_event && IsLeftButton(*a_event) &&
                 !Dialogue::IsCameraEnabled()) {
                 const auto menu = static_cast<std::byte*>(a_user) - kInputUserOffset;
-                if (OnLeftButton(menu, static_cast<const RE::ButtonEvent&>(*a_event))) {
+                if (g_freeLook ? BlockFreeLookClick()
+                               : OnLeftButton(menu, static_cast<const RE::ButtonEvent&>(*a_event))) {
                     a_event->status = RE::InputEvent::Status::kStop;
                     return false;
                 }
@@ -212,6 +230,8 @@ namespace DragLook {
         [[nodiscard]] bool HoldCursorMessage(const std::byte* a_message) {
             const auto type = *reinterpret_cast<const std::uint32_t*>(a_message + kMessageTypeOffset);
             if (type == kHideMenuMessage) {
+                // Closing: keep free look from restarting until the next conversation arms it
+                g_armed.store(false, std::memory_order_release);
                 ResetDrag();
                 return false;
             }
@@ -221,12 +241,9 @@ namespace DragLook {
             const auto data = *reinterpret_cast<const void* const*>(a_message + kMessageDataOffset);
 
             std::scoped_lock lock{g_lock};
-            if (!g_dragging.load(std::memory_order_relaxed)) {
-                return false;
-            }
             if (data == EntryOf(g_showCursor)) {
                 g_wantCursor = true;
-                return true;
+                return g_dragging.load(std::memory_order_relaxed);
             }
             if (data == EntryOf(g_hideCursor)) {
                 if (g_ownHidePending) {
@@ -274,14 +291,14 @@ namespace DragLook {
     }
 
     bool Install(const Settings& a_settings) {
-        if (!a_settings.dragRotation) {
+        if (!a_settings.dragRotation && !a_settings.freeLook) {
             return true;
         }
 
         if (!VtableSlotIs(ID::MenuVtable, kMouseEventAtSlot, ID::MouseEventAt) ||
             !VtableSlotIs(ID::MovieVtable, kGetViewportSlot, ID::GetViewport) ||
             !VtableSlotIs(ID::MovieVtable, kHitTestSlot, ID::HitTest)) {
-            REX::ERROR("DialogueMenu or Scaleform not recognized, drag rotation disabled");
+            REX::ERROR("DialogueMenu or Scaleform not recognized, mouse rotation disabled");
             return false;
         }
 
@@ -293,17 +310,18 @@ namespace DragLook {
         g_messageQueue = reinterpret_cast<void* const*>(ID::MessageQueue.address());
         g_menuCursor = reinterpret_cast<const std::byte* const*>(ID::MenuCursor.address());
         g_debug = a_settings.debugLog;
+        g_freeLook = a_settings.freeLook;
 
         g_processMessage = VtableHook::Install<ProcessMessage_t>(ID::MenuVtable, kProcessMessageSlot,
                                                                  ID::ProcessMessage, &OnProcessMessage);
         if (!g_processMessage) {
-            REX::ERROR("DialogueMenu messages not recognized, drag rotation disabled");
+            REX::ERROR("DialogueMenu messages not recognized, mouse rotation disabled");
             return false;
         }
         g_shouldHandleEvent = VtableHook::Install<ShouldHandleEvent_t>(ID::InputUserVtable, kShouldHandleEventSlot,
                                                                        ID::ShouldHandleEvent, &OnShouldHandleEvent);
         if (!g_shouldHandleEvent) {
-            REX::ERROR("DialogueMenu input not recognized, drag rotation disabled");
+            REX::ERROR("DialogueMenu input not recognized, mouse rotation disabled");
             return false;
         }
         return true;
@@ -330,9 +348,12 @@ namespace DragLook {
     }
 
     bool Update(RE::InputEvent* a_head) {
-        const bool dragging = g_dragging.load(std::memory_order_acquire);
+        bool dragging = g_dragging.load(std::memory_order_acquire);
         if (!dragging && !Settling()) {
-            return false;
+            if (!StartFreeLook()) {
+                return false;
+            }
+            dragging = true;
         }
         bool held{false};
         for (auto* event = a_head; event; event = event->next) {
@@ -351,7 +372,7 @@ namespace DragLook {
             }
         }
         // The game repeats a held button every frame, so none means the release was lost (e.g. alt-tab)
-        if (dragging && a_head && !held) {
+        if (dragging && !g_freeLook && a_head && !held) {
             EndDrag();
         }
         return dragging;
